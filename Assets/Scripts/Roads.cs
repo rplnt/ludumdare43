@@ -92,7 +92,7 @@ public class Roads : MonoBehaviour {
 
     public List<Vector2> GetPath(Vector2 start, Vector2 target) {
         List<Vector2> path = new List<Vector2>();
-        if (Vector2.Distance(start, target) > 2.0f) {
+        if (Vector2.Distance(start, target) > 1.0f) {
             var nodePath = Pathfinding.FindPath(FindRoadNode(start), FindRoadNode(target));
             if (nodePath == null) {
                 return null;

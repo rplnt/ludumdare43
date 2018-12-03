@@ -5,7 +5,7 @@ using UnityEngine;
 public class Minion : MonoBehaviour {
     Vector2 born;
     Vector2 target;
-    float spread = 0.2f;
+    float spread = 0.25f;
 
     private void Start() {
         born = transform.position;
@@ -33,6 +33,6 @@ public class Minion : MonoBehaviour {
         transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.AngleAxis(angle, Vector3.forward), 300.0f * Time.deltaTime);
 
         /* go */
-        transform.Translate(Vector2.up * 0.15f * Time.deltaTime);
+        transform.Translate(Vector2.up * 0.2f * Time.deltaTime);
     }
 }

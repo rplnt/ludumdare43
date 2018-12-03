@@ -54,7 +54,7 @@ public class PlayerMover : MonoBehaviour {
     
 
     void Move() {
-        if (GameManager.moving) {
+        if (GameManager.moving && !GameManager.over) {
             if (Vector2.Distance(transform.position, target) < 0.5f) {
                 currentTarget = target;
             }
