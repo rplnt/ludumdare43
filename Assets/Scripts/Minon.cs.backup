@@ -1,0 +1,84 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Minion : MonoBehaviour {
+    PlayerMover masterPlayer;
+
+    float tooClose = 0.1f;
+    float followMinionsRate = 0.3f;
+    bool colliding = false;
+    float BackOff { get { return colliding ? -0.5f : 1.0f; } }
+
+    int rank;
+
+    private void Start() {
+        masterPlayer = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMover>();
+        rank = Random.Range(0, 100);
+    }
+
+    private void Update() {
+        if (GameManager.TimeStopped) return;
+        Follow();
+    }
+
+    void Follow() {
+        /* rotate towards master */
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, masterPlayer.transform.rotation, masterPlayer.rotateSpeed * Random.Range(1.0f, 1.5f) * Time.deltaTime);
+        RotateTowardsIfNotTooClose(masterPlayer.transform.position, 0.2f, 1.0f);
+
+        if (masterPlayer.minions.Count > 2) {
+            FollowMinions(masterPlayer.minions);
+        }
+
+        transform.Translate(Vector2.up * masterPlayer.Speed * Time.deltaTime * BackOff);
+    }
+
+    void FollowMinions(List<Minion> minions) {
+        Quaternion fellowRotation = transform.rotation;
+        Minion closest = this;
+        float closestDistance = Mathf.Infinity;
+        for (int i = 0; i < minions.Count; i++) {
+            var m = minions[i];
+            if (m = this) continue;
+
+            fellowRotation = Quaternion.Lerp(fellowRotation, m.transform.rotation, 1.0f / (i + 1));
+
+            if (Vector3.Distance(transform.position, m.transform.position) < closestDistance) {
+                closest = m;
+            }
+        }
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, fellowRotation, masterPlayer.rotateSpeed * followMinionsRate * Time.deltaTime);
+
+        RotateTowardsIfNotTooClose(closest.transform.position, tooClose, 0.8f);
+    }
+
+    void RotateTowardsIfNotTooClose(Vector3 position, float minDistance, float weight) {
+        float angle = TargetAngle(position);
+        Vector3 forward = Vector3.forward;
+        if (Vector3.Distance(transform.position, position) < minDistance) {
+            angle += 90.0f;
+        }
+        Quaternion axis = Quaternion.AngleAxis(angle, Vector3.forward);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, axis, masterPlayer.rotateSpeed * weight * Time.deltaTime);
+    }
+
+    float TargetAngle(Vector3 target) {
+        Vector2 vector = target - transform.position;
+        float angle = Mathf.Atan2(vector.y, vector.x) * Mathf.Rad2Deg - 90.0f;
+
+        return angle;
+    }
+
+    void OnCollisionStay2D(Collision2D collision) {
+        Debug.Log(gameObject.name + " colliding with " + collision.gameObject.name);
+        Minion m = collision.gameObject.GetComponent<Minion>();
+        if (m != null && m.rank > rank) {
+            print("aaa");
+            colliding = true;
+            return;
+        }
+
+        colliding = false;
+    }
+}

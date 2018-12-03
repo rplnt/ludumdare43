@@ -9,21 +9,26 @@ public class PlayerMover : MonoBehaviour {
     List<Vector2> path;
     int pathIndex = 0;
 
+    public SpriteRenderer targeter;
+
 
     public float rotateSpeed;
     public float walkSpeed;
+    public float Speed { get { return walkSpeed * ((pathIndex > 0) ? 1.2f : 1.0f); } }
 
     public InputController input;
     public Roads roads;
 
+    public List<Minion> minions;
+
+
     void Start () {
+        targeter.enabled = false;
         input.NewTarget += SetTarget;
+        minions = new List<Minion>();
+        minions.AddRange(FindObjectsOfType<Minion>());
 	}
-	
-    void Update () {
-        if (GameManager.paused) return;
-        Move();
-    }
+
 
     void SetTarget(Vector2 targetPosition) {
         Debug.Log("Player received new target " + targetPosition);
@@ -32,6 +37,9 @@ public class PlayerMover : MonoBehaviour {
             return;
         }
 
+        targeter.transform.position = targetPosition;
+        targeter.enabled = true;
+
         target = targetPosition;
         currentTarget = path[0];
         pathIndex = 0;
@@ -39,14 +47,21 @@ public class PlayerMover : MonoBehaviour {
     }
 
 
+    void Update () {
+        if (GameManager.TimeStopped) return;
+        Move();
+    }
+    
+
     void Move() {
         if (GameManager.moving) {
-            if (Vector2.Distance(transform.position, currentTarget) < 0.1) {
-                Debug.Log("next");
-
-                if (Vector2.Distance(currentTarget, target) < 0.1) {
-                    Debug.Log("stop");
+            if (Vector2.Distance(transform.position, target) < 0.5f) {
+                currentTarget = target;
+            }
+            if (Vector2.Distance(transform.position, currentTarget) < 0.1f) {
+                if (Vector2.Distance(currentTarget, target) < 0.1f) {
                     GameManager.moving = false;
+                    targeter.enabled = false;
                 } else {
                     pathIndex++;
                     if (pathIndex >= path.Count) {
@@ -61,9 +76,11 @@ public class PlayerMover : MonoBehaviour {
         }
     }
 
+ 
     private void OnDrawGizmos() {
         if (GameManager.moving) Gizmos.DrawSphere(target, 0.2f);
     }
+
 
     void Walk() {
         /* rotate */
@@ -72,8 +89,7 @@ public class PlayerMover : MonoBehaviour {
         transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.AngleAxis(angle, Vector3.forward), rotateSpeed * Time.deltaTime);
 
         /* go */
-        float roadBonus = (pathIndex > 0) ? 1.2f : 1.0f;
-        transform.Translate(Vector2.up * walkSpeed * roadBonus * Time.deltaTime);
+        transform.Translate(Vector2.up * Speed * Time.deltaTime);
 
     }
 }

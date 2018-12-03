@@ -7,6 +7,7 @@ public class Roads : MonoBehaviour {
     public int maxRoadLength;
     public List<Node> nodes;
     public GameObject roads;
+    public GameObject waypoints;
     const float errDst = 0.1f;
 
     private void Awake() {
@@ -15,7 +16,7 @@ public class Roads : MonoBehaviour {
 
     void Start () {
         /* copy over all points */
-        var ends = new List<Node>();
+        var toConnect = new List<Node>();
         int roadId = 0;
 		foreach(LineRenderer road in roads.GetComponentsInChildren<LineRenderer>()) {
             Vector3[] positions = new Vector3[road.positionCount];
@@ -28,18 +29,26 @@ public class Roads : MonoBehaviour {
 
                 nodes.Add(n);
                 if (i == 0 || i == (positions.Length - 1)) {
-                    ends.Add(n);
+                    toConnect.Add(n);
                 }
             }
             roadId++;
         }
 
+        for(int i=0; i < waypoints.transform.childCount; i++) {
+            Node n = new Node(10000 + i, waypoints.transform.GetChild(i).transform.position);
+            nodes.Add(n);
+            toConnect.Add(n);
+        }
+
         /* find connections */
-        foreach (Node end in ends) {
+        foreach (Node node in toConnect) {
             foreach(Node n in nodes) {
-                if (end.road == n.road) continue;
-                if (Vector2.Distance(end.position, n.position) < 0.5f) {
-                    end.DoubleLink(n);
+                if (node.road == n.road) continue;
+                if (n.linked.Contains(node)) continue;
+                float cutOff = node.road > 10000 ? 1.5f : 0.5f;
+                if (Vector2.Distance(node.position, n.position) < cutOff) {
+                    node.DoubleLink(n);
                 }
             }
         }
@@ -49,21 +58,26 @@ public class Roads : MonoBehaviour {
 	}
     
     private void Update() {
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            var path = Pathfinding.FindPath(nodes[Random.Range(0, nodes.Count - 1)], nodes[Random.Range(0, nodes.Count - 1)]);
-            if (path == null) {
-                Debug.Log("Couldn't find path");
-                return;
-            }
-
-            Debug.Log("Found path:");
-            for(int i=0; i < path.Count; i++) {
-                Debug.Log(path[i].position);
-                if (i > 0) {
-                    Debug.DrawLine(path[i - 1].position, path[i].position, Color.yellow, 1.2f);
-                }
+        foreach (Node n in nodes) {
+            foreach (Node ln in n.linked) {
+                Debug.DrawLine(n.position, ln.position, Color.yellow);
             }
         }
+
+        //if (Input.GetKeyDown(KeyCode.Space)) {
+        //    var path = Pathfinding.FindPath(nodes[Random.Range(0, nodes.Count - 1)], nodes[Random.Range(0, nodes.Count - 1)]);
+        //    if (path == null) {
+        //        Debug.Log("Couldn't find path");
+        //        return;
+        //    }
+
+        //    Debug.Log("Found path:");
+        //    for(int i=0; i < path.Count; i++) {
+        //        if (i > 0) {
+        //            Debug.DrawLine(path[i - 1].position, path[i].position, Color.red, 1f);
+        //        }
+        //    }
+        //}
     }
 
 
@@ -78,7 +92,7 @@ public class Roads : MonoBehaviour {
 
     public List<Vector2> GetPath(Vector2 start, Vector2 target) {
         List<Vector2> path = new List<Vector2>();
-        if (Vector2.Distance(start, target) > 1.0f) {
+        if (Vector2.Distance(start, target) > 2.0f) {
             var nodePath = Pathfinding.FindPath(FindRoadNode(start), FindRoadNode(target));
             if (nodePath == null) {
                 return null;

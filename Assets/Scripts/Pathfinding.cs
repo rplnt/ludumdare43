@@ -47,7 +47,7 @@ public static class Pathfinding {
     public static List<Node> Path;
 
     public static List<Node> FindPath(Node start, Node target) {
-        Debug.Log("FindPath");
+        //Debug.Log("FindPath");
         if (start == null || target == null) return null;
 
         Path = null;
@@ -57,7 +57,7 @@ public static class Pathfinding {
         open.Add(start);
         while (open.Count > 0) {
             Node current = open[0];
-            Debug.Log("Searching from: " + current);
+            //Debug.Log("Searching from: " + current);
             int currentIndex = 0;
             for (int i = 1; i < open.Count; i++) {
                 if (open[i].FCost < current.FCost || open[i].FCost == current.FCost && open[i].hCost < current.hCost) {
@@ -69,12 +69,12 @@ public static class Pathfinding {
             closed.Add(current);
 
             if (current == target) {
-                Debug.Log("Reached goal: " + target);
+                //Debug.Log("Reached goal: " + target);
                 GeneratePath(start, target);
             }
 
             foreach(Node next in current.GetAdjacent()) {
-                Debug.Log("Next: " + next);
+                //Debug.Log("Next: " + next);
                 if (closed.Contains(next)) continue;
                 float cost = current.gCost + Vector2.Distance(current.position, next.position);
                 if (cost < next.gCost || !open.Contains(next)) {
@@ -93,7 +93,6 @@ public static class Pathfinding {
     }
     
     public static void GeneratePath(Node start, Node target) {
-        Debug.Log("GetPath");
         List<Node> path = new List<Node>();
         Node current = target;
 
